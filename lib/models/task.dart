@@ -7,6 +7,16 @@ enum TaskStatus {
   final String value;
 }
 
+extension TaskStatusLabel on TaskStatus {
+  static const Map<TaskStatus, String> _labels = {
+    TaskStatus.toDo: "To do",
+    TaskStatus.inProgress: "In progress",
+    TaskStatus.done: "Done",
+  };
+
+  String get label => _labels[this] ?? name;
+}
+
 class Task {
   Task({
     required this.title,
@@ -14,10 +24,10 @@ class Task {
     required this.status,
     this.rowId = '',
   });
-  String rowId;
-  String title;
-  String description;
-  TaskStatus status;
+  final String rowId;
+  final String title;
+  final String description;
+  final TaskStatus status;
 
   factory Task.fromJson(Map<String, dynamic> json) {
     return Task(

@@ -1,6 +1,7 @@
 import "dart:convert";
 
 import "package:dio/dio.dart";
+import "package:taskboard/config/app_config.dart";
 import "package:taskboard/models/task.dart";
 
 class TaskApi {
@@ -19,8 +20,8 @@ class TaskApi {
 
   final Dio _client;
 
-  static const String _baseUrl = "http://localhost:8080";
-  static const String _userId = "f3ef6db8-224d-4389-a6e0-05a03d7a8a6f";
+  static const String _baseUrl = AppConfig.baseUrl;
+  static const String _userId = AppConfig.userId;
 
   Future<List<Task>> fetchTasks() async {
     final response = await _client.get("/tasks");

@@ -2,8 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:taskboard/screens/addform.dart';
 import 'package:taskboard/screens/item.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int _refreshToken = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -23,12 +30,15 @@ class HomePage extends StatelessWidget {
         backgroundColor: Colors.blue,
         centerTitle: true,
       ),
-      body: const Item(),
+      body: Item(key: ValueKey(_refreshToken)),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(
+        onPressed: () async {
+          final created = await Navigator.of(
             context,
           ).push(MaterialPageRoute(builder: (_) => const AddForm()));
+          if (created == true) {
+            setState(() => _refreshToken++);
+          }
         },
         child: const Icon(Icons.add),
       ),

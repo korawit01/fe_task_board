@@ -50,7 +50,7 @@ class _ItemState extends State<Item> {
     }
   }
 
-  void deleteItem(String rowId) async {
+  Future<void> _deleteItem(String rowId) async {
     try {
       await _api.deleteTask(rowId: rowId);
       if (!mounted) {
@@ -60,11 +60,16 @@ class _ItemState extends State<Item> {
         _tasks.removeWhere((task) => task.rowId == rowId);
       });
     } catch (e) {
-      // Handle error if needed
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to delete task")),
+      );
     }
   }
 
-  Color colorChange(TaskStatus status) {
+  Color _statusColor(TaskStatus status) {
     switch (status) {
       case TaskStatus.toDo:
         return Colors.amber;
@@ -142,14 +147,14 @@ class _ItemState extends State<Item> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: colorChange(task.status).withOpacity(0.15),
+                          color: _statusColor(task.status).withOpacity(0.15),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          task.status.toString().split('.').last,
+                          task.status.label,
                           style: TextStyle(
                             fontSize: 12,
-                            color: colorChange(task.status),
+                            color: _statusColor(task.status),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -164,12 +169,15 @@ class _ItemState extends State<Item> {
                           Icons.edit_outlined,
                           color: Colors.blueGrey,
                         ),
-                        onPressed: () {
-                          Navigator.of(context).push(
+                        onPressed: () async {
+                          final updated = await Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) => AddForm(task: task),
                             ),
                           );
+                          if (updated == true) {
+                            _loadTasks();
+                          }
                         },
                       ),
                       IconButton(
@@ -177,7 +185,7 @@ class _ItemState extends State<Item> {
                           Icons.delete_outline,
                           color: Colors.redAccent,
                         ),
-                        onPressed: () => deleteItem(task.rowId),
+                        onPressed: () => _deleteItem(task.rowId),
                       ),
                     ],
                   ),
