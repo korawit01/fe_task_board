@@ -3,6 +3,7 @@ import "dart:convert";
 import "package:dio/dio.dart";
 import "package:taskboard/config/app_config.dart";
 import "package:taskboard/models/task.dart";
+import "package:taskboard/services/auth_storage.dart";
 
 class TaskApi {
   TaskApi({Dio? client})
@@ -11,20 +12,26 @@ class TaskApi {
           Dio(
             BaseOptions(
               baseUrl: _baseUrl,
-              headers: const {
-                "accept": "application/json",
-                "X-User-ID": _userId,
-              },
+              headers: const {"accept": "application/json"},
             ),
           );
 
   final Dio _client;
 
   static const String _baseUrl = AppConfig.baseUrl;
-  static const String _userId = AppConfig.userId;
+  Future<Map<String, String>> _authHeaders() async {
+    final token = await AuthStorage.getToken();
+    if (token == null || token.isEmpty) {
+      throw Exception("Missing auth token");
+    }
+    return {"Authorization": "Bearer $token"};
+  }
 
   Future<List<Task>> fetchTasks() async {
-    final response = await _client.get("/tasks");
+    final response = await _client.get(
+      "/tasks",
+      options: Options(headers: await _authHeaders()),
+    );
     final statusCode = response.statusCode ?? 0;
     if (statusCode < 200 || statusCode >= 300) {
       throw Exception("Failed to load tasks ($statusCode)");
@@ -60,7 +67,12 @@ class TaskApi {
         "description": description,
         "status": status.value,
       },
-      options: Options(headers: const {"Content-Type": "application/json"}),
+      options: Options(
+        headers: {
+          "Content-Type": "application/json",
+          ...await _authHeaders(),
+        },
+      ),
     );
 
     final statusCode = response.statusCode ?? 0;
@@ -82,7 +94,12 @@ class TaskApi {
         "description": description,
         "status": status.value,
       },
-      options: Options(headers: const {"Content-Type": "application/json"}),
+      options: Options(
+        headers: {
+          "Content-Type": "application/json",
+          ...await _authHeaders(),
+        },
+      ),
     );
 
     final statusCode = response.statusCode ?? 0;
@@ -94,7 +111,12 @@ class TaskApi {
   Future<void> deleteTask({required String rowId}) async {
     final response = await _client.delete(
       "/tasks/$rowId",
-      options: Options(headers: const {"Content-Type": "application/json"}),
+      options: Options(
+        headers: {
+          "Content-Type": "application/json",
+          ...await _authHeaders(),
+        },
+      ),
     );
 
     final statusCode = response.statusCode ?? 0;
